@@ -1,0 +1,457 @@
+<meta name="dash-one-writer">
+<style>
+  .hc { font-family: var(--font-anthropic-sans); color: var(--color-fg); display: flex; flex-direction: column; gap: var(--cds-gap-xl); }
+  .hc-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0 0 var(--cds-gap-sm); }
+  .hc-take { font-size: var(--cds-font-size-body); line-height: 1.55; margin: 0 0 var(--cds-gap-xs); max-width: 60rem; }
+  .hc-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; }
+  .hc .hc-take b { font-weight: 600; }
+  .hc h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-sm); }
+  .hc h3 { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .hc-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: var(--cds-gap-xs) 0 var(--cds-gap-md); }
+  .hc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: var(--cds-gap-md); }
+  .hc-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+  .hc-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; }
+  .hc-tile .hc-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: calc(var(--cds-font-size-title) * 1.5); margin: var(--cds-gap-xs) 0; font-variant-numeric: tabular-nums; display: block; }
+  .hc-tile .hc-meta { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .hc-tile.hc-context { background: transparent; }
+  .hc-tile.hc-context .hc-big { color: var(--color-fg-muted); font-size: var(--cds-font-size-title); }
+  .hc-funnel { min-height: 300px; }
+  .hc-fstep { margin-bottom: var(--cds-gap-md); }
+  .hc-frow { display: flex; justify-content: space-between; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+  .hc-frow .hc-fname { font-weight: 600; color: var(--color-fg); }
+  .hc-frow .hc-frate { color: var(--color-fg-muted); text-align: right; }
+  .hc-fbar { height: 22px; border-radius: var(--cds-radius); }
+  .hc-ftrack { background: var(--cds-chart-grid); border-radius: var(--cds-radius); }
+  .hc-trend { position: relative; min-height: 280px; }
+  .hc-trend svg text { fill: var(--color-fg-muted); font-size: var(--cds-font-size-caption); font-family: var(--font-anthropic-sans); }
+  .hc-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .hc-tip .hc-tipd { color: var(--cds-text-secondary); margin-bottom: 2px; }
+  .hc-sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+  .hc-bdhead { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--cds-gap-md); flex-wrap: wrap; }
+  .hc-tablebox { overflow: auto; }
+  .hc-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .hc-table th { text-align: right; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+  .hc-table td { text-align: right; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+  .hc-table th:first-child, .hc-table td:first-child { text-align: left; }
+  .hc-table th.hc-prim { color: var(--color-fg); }
+  .hc-table td.hc-low { color: var(--color-bad); }
+  .hc-table td.hc-high { color: var(--color-ok); }
+  .hc-fail { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: inherit; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hc-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+  .hc details { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .hc details summary { cursor: pointer; color: var(--color-fg); font-size: var(--cds-font-size-body); }
+  .hc dl { display: grid; grid-template-columns: minmax(9rem, max-content) 1fr; gap: var(--cds-gap-xs) var(--cds-gap-md); margin: var(--cds-gap-md) 0; }
+  .hc dt { color: var(--color-fg); font-weight: 600; }
+  .hc dd { margin: 0; }
+  [data-dash-source-state=empty] { color: transparent; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="hc">
+  <header class="hc-head">
+    <h1>Historical conversion performance</h1>
+    <p class="hc-take"><b data-draw="t_emp" data-source="summary" data-field="emp_conv" class="dash-skeleton">—</b> of leads completed an Employment intake and <b data-draw="t_wc" data-source="summary" data-field="wc_conv" class="dash-skeleton">—</b> completed a Workers' Comp intake. The biggest drop-off is at <b data-draw="t_worst" data-source="worst_step" data-field="metric" class="dash-skeleton">—</b>, where only <b data-draw="t_worst_rate" data-source="worst_step" data-field="rate" class="dash-skeleton">—</b> move on. Employment conversion ranges from <b data-draw="t_lo" data-source="agent_range" data-field="worst_rate" class="dash-skeleton">—</b> (<span data-draw="t_lo_name" data-source="agent_range" data-field="worst_agent" class="dash-skeleton">—</span>) to <b data-draw="t_hi" data-source="agent_range" data-field="best_rate" class="dash-skeleton">—</b> (<span data-draw="t_hi_name" data-source="agent_range" data-field="best_agent" class="dash-skeleton">—</span>) across agents.</p>
+    <p class="hc-sub">Sample data: <span data-draw="s_leads" data-source="summary" data-field="leads">—</span> synthetic leads, <span data-draw="s_from" data-source="summary" data-field="first_date">—</span> to <span data-draw="s_to" data-source="summary" data-field="last_date">—</span>. Not real client data.</p>
+  </header>
+
+  <section>
+    <h2>Primary KPIs</h2>
+    <div class="hc-grid">
+      <div class="hc-card hc-tile">
+        <h3>Employment conversion</h3>
+        <span class="hc-big dash-skeleton" data-draw="k_emp" data-source="summary" data-field="emp_conv">—</span>
+        <div class="hc-meta"><span data-draw="k_emp_n" data-source="summary" data-field="emp_intakes">—</span> completed Employment intakes</div>
+      </div>
+      <div class="hc-card hc-tile">
+        <h3>Workers' Comp conversion</h3>
+        <span class="hc-big dash-skeleton" data-draw="k_wc" data-source="summary" data-field="wc_conv">—</span>
+        <div class="hc-meta"><span data-draw="k_wc_n" data-source="summary" data-field="wc_intakes">—</span> completed WC intakes</div>
+      </div>
+      <div class="hc-card hc-tile">
+        <h3>Dual-case conversion</h3>
+        <span class="hc-big dash-skeleton" data-draw="k_dual" data-source="summary" data-field="dual_conv">—</span>
+        <div class="hc-meta"><span data-draw="k_dual_n" data-source="summary" data-field="dual_intakes">—</span> leads with both intakes completed</div>
+      </div>
+      <div class="hc-card hc-tile hc-context">
+        <h3>Any-case conversion (context)</h3>
+        <span class="hc-big dash-skeleton" data-draw="k_any" data-source="summary" data-field="any_conv">—</span>
+        <div class="hc-meta"><span data-draw="k_any_n" data-source="summary" data-field="any_intakes">—</span> leads with at least one completed intake</div>
+      </div>
+    </div>
+    <p class="hc-note">Each rate is completed intakes ÷ total leads. A lead with both case types counts toward Employment and WC, so those two rates add up to more than any-case conversion.</p>
+  </section>
+
+  <div class="hc-grid2">
+    <section class="hc-card">
+      <h2>Where prospects fall off</h2>
+      <p class="hc-note">Supporting KPIs: each step as a share of the step before it. The weakest step is in red.</p>
+      <div class="hc-funnel" data-draw="funnel" data-source="funnel"></div>
+    </section>
+    <section class="hc-card">
+      <h2>Conversion by month</h2>
+      <p class="hc-note">Completed intakes ÷ leads received that month, by case type.</p>
+      <div class="hc-trend" data-draw="trend" data-source="monthly"></div>
+    </section>
+  </div>
+
+  <section class="hc-card">
+    <div class="hc-bdhead">
+      <div>
+        <h2>How results vary</h2>
+        <p class="hc-note">Primary and supporting KPIs for each group, best Employment conversion first. Green and red mark the highest and lowest value in each column.</p>
+      </div>
+      <select class="dash-select hc-dim" aria-label="Break down by">
+        <option value="Agent">By agent</option>
+        <option value="Channel">By channel</option>
+        <option value="Source">By source</option>
+      </select>
+    </div>
+    <div class="hc-tablebox">
+      <table class="hc-table" data-source="breakdowns" data-row-key="dimension,group">
+        <thead>
+          <tr>
+            <th data-field="group">Group</th>
+            <th data-field="leads">Leads</th>
+            <th class="hc-prim" data-field="emp_conv">Employment conv.</th>
+            <th class="hc-prim" data-field="wc_conv">WC conv.</th>
+            <th class="hc-prim" data-field="dual_conv">Dual-case conv.</th>
+            <th data-field="eval_completion">Eval. completion</th>
+            <th data-field="eval_pass">Eval. pass</th>
+            <th data-field="retainer_signing">Retainer signing</th>
+            <th data-field="intake_completion">Intake completion</th>
+          </tr>
+        </thead>
+        <tbody data-draw="bd_rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <details>
+    <summary>Metric definitions and method</summary>
+    <dl>
+      <dt>Employment conversion</dt><dd>Leads with a completed Employment intake ÷ total leads.</dd>
+      <dt>Workers' Comp conversion</dt><dd>Leads with a completed Workers' Compensation (WC) intake ÷ total leads.</dd>
+      <dt>Dual-case conversion</dt><dd>Leads with completed intakes for both case types ÷ total leads.</dd>
+      <dt>Any-case conversion</dt><dd>Leads with at least one completed intake ÷ total leads. Shown for context only, not as a headline metric.</dd>
+      <dt>Evaluation completion</dt><dd>Completed evaluations ÷ leads received.</dd>
+      <dt>Evaluation pass</dt><dd>Leads whose evaluation passed for Employment, WC or both ÷ completed evaluations.</dd>
+      <dt>Retainer signing</dt><dd>Leads with at least one signed retainer ÷ evaluation passes.</dd>
+      <dt>Intake completion</dt><dd>Leads with at least one completed intake ÷ leads with a signed retainer.</dd>
+    </dl>
+    <p>The four supporting rates are counted per lead, so multiplied together they equal any-case conversion. Total leads and leads received are treated as the same count. All data on this page is synthetic sample data made for practice; swap in the real lead export to use it.</p>
+  </details>
+</div>
+
+<script>
+  dash.calc('summary', {
+    title: 'Headline conversion totals',
+    description: 'Lead counts and conversion rates across all sample leads.',
+    inputs: ['leads'],
+    fn: (leads) => {
+      const t = (v) => v === true || v === 'True' || v === 'true';
+      const n = leads.length;
+      const ev = leads.filter((r) => t(r.evaluation_completed)).length;
+      const ps = leads.filter((r) => ['Employment', 'WC', 'Both'].includes(r.evaluation_result)).length;
+      const sg = leads.filter((r) => t(r.emp_retainer_signed) || t(r.wc_retainer_signed)).length;
+      const ie = leads.filter((r) => t(r.emp_intake_completed)).length;
+      const iw = leads.filter((r) => t(r.wc_intake_completed)).length;
+      const ib = leads.filter((r) => t(r.emp_intake_completed) && t(r.wc_intake_completed)).length;
+      const ia = leads.filter((r) => t(r.emp_intake_completed) || t(r.wc_intake_completed)).length;
+      const days = leads.map((r) => String(r.lead_date).slice(0, 10)).sort();
+      return [{
+        leads: n, evaluations: ev, passes: ps, retainers: sg,
+        emp_intakes: ie, wc_intakes: iw, dual_intakes: ib, any_intakes: ia,
+        emp_conv: n ? ie / n : null, wc_conv: n ? iw / n : null, dual_conv: n ? ib / n : null, any_conv: n ? ia / n : null,
+        first_date: days[0], last_date: days[days.length - 1],
+      }];
+    },
+  });
+
+  dash.calc('funnel', {
+    title: 'Lead funnel steps',
+    description: 'Each funnel step count and its rate from the step before.',
+    inputs: ['summary'],
+    fn: (summary) => {
+      const s = summary[0];
+      const steps = [
+        ['Leads received', null, s.leads],
+        ['Completed evaluations', 'Evaluation completion', s.evaluations],
+        ['Evaluation passes', 'Evaluation pass', s.passes],
+        ['Signed retainers', 'Retainer signing', s.retainers],
+        ['Completed intakes', 'Intake completion', s.any_intakes],
+      ];
+      return steps.map(([step, metric, count], i) => ({
+        step, metric, count, share_of_leads: s.leads ? count / s.leads : null,
+        rate: i === 0 ? null : (steps[i - 1][2] ? count / steps[i - 1][2] : null),
+      }));
+    },
+  });
+
+  dash.calc('worst_step', {
+    title: 'Weakest funnel step',
+    description: 'The supporting KPI with the lowest step rate.',
+    inputs: ['funnel'],
+    fn: (funnel) => {
+      const w = funnel.filter((r) => r.rate != null).sort((a, b) => a.rate - b.rate)[0];
+      return w ? [{ metric: w.metric, step: w.step, rate: w.rate }] : [];
+    },
+  });
+
+  dash.calc('monthly', {
+    title: 'Conversion by month',
+    description: 'Employment, WC and dual-case conversion for leads received each month.',
+    inputs: ['leads'],
+    fn: (leads) => {
+      const t = (v) => v === true || v === 'True' || v === 'true';
+      const m = new Map();
+      for (const r of leads) {
+        const k = String(r.lead_date).slice(0, 7);
+        if (!m.has(k)) m.set(k, { month: k, leads: 0, e: 0, w: 0, b: 0 });
+        const o = m.get(k);
+        o.leads += 1;
+        if (t(r.emp_intake_completed)) o.e += 1;
+        if (t(r.wc_intake_completed)) o.w += 1;
+        if (t(r.emp_intake_completed) && t(r.wc_intake_completed)) o.b += 1;
+      }
+      return [...m.values()].sort((a, b) => a.month.localeCompare(b.month))
+        .map((o) => ({ month: o.month, leads: o.leads, emp_conv: o.e / o.leads, wc_conv: o.w / o.leads, dual_conv: o.b / o.leads }));
+    },
+  });
+
+  dash.calc('breakdowns', {
+    title: 'KPIs by agent, channel, source',
+    description: 'Primary and supporting KPIs for each agent, channel and source.',
+    inputs: ['leads'],
+    fn: (leads) => {
+      const t = (v) => v === true || v === 'True' || v === 'true';
+      const div = (a, b) => (b ? a / b : null);
+      const out = [];
+      for (const [dimension, col] of [['Agent', 'agent'], ['Channel', 'channel'], ['Source', 'source']]) {
+        const groups = new Map();
+        for (const r of leads) {
+          if (!groups.has(r[col])) groups.set(r[col], []);
+          groups.get(r[col]).push(r);
+        }
+        for (const [group, rs] of groups) {
+          const n = rs.length;
+          const ev = rs.filter((r) => t(r.evaluation_completed)).length;
+          const ps = rs.filter((r) => ['Employment', 'WC', 'Both'].includes(r.evaluation_result)).length;
+          const sg = rs.filter((r) => t(r.emp_retainer_signed) || t(r.wc_retainer_signed)).length;
+          const ia = rs.filter((r) => t(r.emp_intake_completed) || t(r.wc_intake_completed)).length;
+          const ie = rs.filter((r) => t(r.emp_intake_completed)).length;
+          const iw = rs.filter((r) => t(r.wc_intake_completed)).length;
+          const ib = rs.filter((r) => t(r.emp_intake_completed) && t(r.wc_intake_completed)).length;
+          out.push({
+            dimension, group, leads: n,
+            emp_conv: div(ie, n), wc_conv: div(iw, n), dual_conv: div(ib, n),
+            eval_completion: div(ev, n), eval_pass: div(ps, ev), retainer_signing: div(sg, ps), intake_completion: div(ia, sg),
+          });
+        }
+      }
+      return out;
+    },
+  });
+
+  dash.calc('agent_range', {
+    title: 'Agent conversion range',
+    description: 'Highest and lowest Employment conversion among agents.',
+    inputs: ['breakdowns'],
+    fn: (breakdowns) => {
+      const a = breakdowns.filter((r) => r.dimension === 'Agent' && r.emp_conv != null).sort((x, y) => y.emp_conv - x.emp_conv);
+      if (!a.length) return [];
+      return [{ best_agent: a[0].group, best_rate: a[0].emp_conv, worst_agent: a[a.length - 1].group, worst_rate: a[a.length - 1].emp_conv }];
+    },
+  });
+
+  const pct = d3.format('.1%');
+  const int = d3.format(',');
+  const month = (s) => d3.utcFormat('%b %Y')(new Date(s + 'T00:00:00Z'));
+  const txt = (v) => String(v);
+
+  const single = (name, src, field, fmt) => dash.draw(name, (el) => {
+    const d = dash.data(src);
+    el.classList.toggle('dash-skeleton', d.status === 'loading');
+    const row = d.status === 'ok' && d.data.length ? d.data[0] : null;
+    el.textContent = row && row[field] != null ? fmt(row[field]) : '—';
+  });
+
+  single('t_emp', 'summary', 'emp_conv', pct);
+  single('t_wc', 'summary', 'wc_conv', pct);
+  single('t_worst', 'worst_step', 'metric', (v) => String(v).toLowerCase());
+  single('t_worst_rate', 'worst_step', 'rate', pct);
+  single('t_lo', 'agent_range', 'worst_rate', pct);
+  single('t_lo_name', 'agent_range', 'worst_agent', txt);
+  single('t_hi', 'agent_range', 'best_rate', pct);
+  single('t_hi_name', 'agent_range', 'best_agent', txt);
+  single('s_leads', 'summary', 'leads', int);
+  single('s_from', 'summary', 'first_date', month);
+  single('s_to', 'summary', 'last_date', month);
+  single('k_emp', 'summary', 'emp_conv', pct);
+  single('k_wc', 'summary', 'wc_conv', pct);
+  single('k_dual', 'summary', 'dual_conv', pct);
+  single('k_any', 'summary', 'any_conv', pct);
+  single('k_emp_n', 'summary', 'emp_intakes', int);
+  single('k_wc_n', 'summary', 'wc_intakes', int);
+  single('k_dual_n', 'summary', 'dual_intakes', int);
+  single('k_any_n', 'summary', 'any_intakes', int);
+
+  const failed = (el) => {
+    const f = document.createElement('div');
+    f.className = 'hc-fail';
+    f.textContent = 'Failed to load';
+    el.replaceChildren(f);
+  };
+
+  dash.draw('funnel', (el) => {
+    const d = dash.data('funnel');
+    el.classList.toggle('dash-skeleton', d.status === 'loading');
+    if (d.status === 'error') return failed(el);
+    if (d.status !== 'ok' || !d.data.length) return el.replaceChildren();
+    const rows = d.data;
+    const rated = rows.filter((r) => r.rate != null);
+    const worst = rated.length ? d3.least(rated, (r) => r.rate) : null;
+    const max = rows[0].count || 1;
+    el.replaceChildren(...rows.map((r) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'hc-fstep';
+      const top = document.createElement('div');
+      top.className = 'hc-frow';
+      const name = document.createElement('span');
+      name.className = 'hc-fname';
+      name.textContent = `${r.step} · ${int(r.count)}`;
+      const rate = document.createElement('span');
+      rate.className = 'hc-frate';
+      rate.textContent = r.rate == null ? `${pct(r.share_of_leads)} of leads` : `${r.metric} ${pct(r.rate)} (${pct(1 - r.rate)} lost)`;
+      if (r === worst) rate.style.color = 'var(--color-bad)';
+      top.append(name, rate);
+      const track = document.createElement('div');
+      track.className = 'hc-ftrack';
+      const bar = document.createElement('div');
+      bar.className = 'hc-fbar';
+      bar.style.width = `${Math.max(0.5, (r.count / max) * 100)}%`;
+      bar.style.background = r === worst ? 'var(--cds-chart-status-critical)' : dash.colors[0];
+      track.append(bar);
+      wrap.append(top, track);
+      return wrap;
+    }));
+  });
+
+  dash.draw('trend', (el) => {
+    const d = dash.data('monthly');
+    el.classList.toggle('dash-skeleton', d.status === 'loading');
+    if (d.status === 'error') return failed(el);
+    if (d.status !== 'ok' || !d.data.length) return el.replaceChildren();
+    const series = [['emp_conv', 'Employment'], ['wc_conv', "Workers' Comp"], ['dual_conv', 'Dual-case']];
+    const rows = d.data.map((r) => ({ ...r, date: new Date(r.month + '-01T00:00:00Z') }));
+    const W = Math.max(280, el.clientWidth || 600);
+    const H = 280;
+    el.replaceChildren();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const ymax = d3.max(rows, (r) => d3.max(series, ([k]) => r[k])) || 0.1;
+    const y0 = d3.scaleLinear([0, ymax * 1.15], [H - 28, 12]).nice();
+    const yTicks = y0.ticks(5);
+    const probe = svg.append('text');
+    const widthOf = (s) => { probe.text(s); return probe.node().getComputedTextLength(); };
+    const left = d3.max(yTicks, (v) => widthOf(d3.format('.0%')(v))) + 10;
+    const last = rows[rows.length - 1];
+    const endLabels = series.map(([k, label]) => `${label} ${pct(last[k])}`);
+    const right = d3.max(endLabels, widthOf) + 14;
+    const xLabelW = widthOf('Mmm 00') + 16;
+    probe.remove();
+    const x = d3.scaleUtc(d3.extent(rows, (r) => r.date), [left, W - right]);
+    const y = y0;
+    const g = svg.append('g');
+    g.selectAll('line.grid').data(yTicks).join('line')
+      .attr('x1', left).attr('x2', W - right).attr('y1', y).attr('y2', y)
+      .attr('stroke', 'var(--cds-chart-grid)').attr('stroke-width', 1);
+    g.selectAll('text.yt').data(yTicks).join('text')
+      .attr('x', left - 8).attr('y', (v) => y(v)).attr('dy', '0.32em').attr('text-anchor', 'end')
+      .text((v) => d3.format('.0%')(v));
+    const nx = Math.max(2, Math.min(6, Math.floor((W - left - right) / 70)));
+    const fit = Math.max(1, Math.floor((W - left - right) / xLabelW));
+    const allTicks = x.ticks(nx);
+    const every = Math.ceil(allTicks.length / fit);
+    const xTicks = allTicks.filter((_, i) => i % every === 0);
+    g.selectAll('text.xt').data(xTicks).join('text')
+      .attr('x', (v) => x(v)).attr('y', H - 8).attr('text-anchor', 'middle')
+      .text((v) => d3.utcFormat('%b %y')(v));
+    series.forEach(([k], i) => {
+      g.append('path').datum(rows)
+        .attr('fill', 'none').attr('stroke', dash.colors[i]).attr('stroke-width', 2)
+        .attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
+        .attr('d', d3.line((r) => x(r.date), (r) => y(r[k])));
+    });
+    const ends = series.map(([k], i) => ({ i, y: y(last[k]), text: endLabels[i] })).sort((a, b) => a.y - b.y);
+    for (let j = 1; j < ends.length; j++) if (ends[j].y - ends[j - 1].y < 14) ends[j].y = ends[j - 1].y + 14;
+    ends.forEach((e) => g.append('text').attr('x', W - right + 6).attr('y', e.y).attr('dy', '0.32em')
+      .style('fill', dash.colors[e.i]).text(e.text));
+    const tip = document.createElement('div');
+    tip.className = 'hc-tip';
+    tip.hidden = true;
+    el.append(tip);
+    const rule = g.append('line').attr('y1', 12).attr('y2', H - 28).attr('stroke', 'var(--cds-chart-reference)').attr('opacity', 0);
+    const dots = series.map((_, i) => g.append('circle').attr('r', 4).attr('fill', dash.colors[i]).attr('opacity', 0));
+    svg.append('rect').attr('x', left).attr('y', 0).attr('width', Math.max(0, W - left - right)).attr('height', H)
+      .attr('fill', 'transparent')
+      .on('mousemove', (ev) => {
+        const [mx] = d3.pointer(ev);
+        const r = d3.least(rows, (q) => Math.abs(x(q.date) - mx));
+        rule.attr('x1', x(r.date)).attr('x2', x(r.date)).attr('opacity', 1);
+        series.forEach(([k], i) => dots[i].attr('cx', x(r.date)).attr('cy', y(r[k])).attr('opacity', 1));
+        const head = document.createElement('div');
+        head.className = 'hc-tipd';
+        head.textContent = `${d3.utcFormat('%B %Y')(r.date)} · ${int(r.leads)} leads`;
+        const lines = series.map(([k, label], i) => {
+          const line = document.createElement('div');
+          const sw = document.createElement('span');
+          sw.className = 'hc-sw';
+          sw.style.background = dash.colors[i];
+          line.append(sw, `${label} ${pct(r[k])}`);
+          return line;
+        });
+        tip.replaceChildren(head, ...lines);
+        tip.hidden = false;
+        const box = el.getBoundingClientRect();
+        const px = (x(r.date) / W) * box.width;
+        const tw = tip.offsetWidth;
+        tip.style.left = `${Math.min(Math.max(0, px + 12), box.width - tw)}px`;
+        tip.style.top = '8px';
+      })
+      .on('mouseleave', () => {
+        tip.hidden = true;
+        rule.attr('opacity', 0);
+        dots.forEach((c) => c.attr('opacity', 0));
+      });
+  });
+
+  let dim = 'Agent';
+  document.querySelectorAll('.hc-dim').forEach((s) => {
+    s.value = dim;
+    s.addEventListener('change', () => { dim = s.value; dash.draw('bd_rows'); });
+  });
+
+  const cols = ['leads', 'emp_conv', 'wc_conv', 'dual_conv', 'eval_completion', 'eval_pass', 'retainer_signing', 'intake_completion'];
+  dash.draw('bd_rows', (el) => {
+    const d = dash.data('breakdowns');
+    if (d.status !== 'ok') return el.replaceChildren();
+    const rows = d.data.filter((r) => r.dimension === dim).sort((a, b) => (b.emp_conv ?? -1) - (a.emp_conv ?? -1));
+    const ext = Object.fromEntries(cols.slice(1).map((c) => [c, d3.extent(rows, (r) => r[c])]));
+    el.replaceChildren(...rows.map((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = `${encodeURIComponent(r.dimension)},${encodeURIComponent(r.group)}`;
+      const name = document.createElement('td');
+      name.textContent = r.group;
+      tr.append(name);
+      cols.forEach((c) => {
+        const td = document.createElement('td');
+        td.textContent = r[c] == null ? '—' : (c === 'leads' ? int(r[c]) : pct(r[c]));
+        if (c !== 'leads' && rows.length > 2 && r[c] != null) {
+          if (r[c] === ext[c][1]) td.className = 'hc-high';
+          else if (r[c] === ext[c][0]) td.className = 'hc-low';
+        }
+        tr.append(td);
+      });
+      return tr;
+    }));
+  });
+</script>
